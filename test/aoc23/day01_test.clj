@@ -10,5 +10,5 @@
   (is (= 14 (subject/make-number (subject/get-numbers-words "zoneight234"))))
   (is (= 76 (subject/make-number (subject/get-numbers-words "7pqrstsixteen"))))
   (is (= 84 (subject/make-number (subject/get-numbers-words "heightwothreennzljtptwo94"))))
-  (is (= 38 (subject/make-number (subject/get-numbers-words "3eightwoqs"))))
+  (is (= 32 (subject/make-number (subject/get-numbers-words "3eightwoqs"))))
   )
