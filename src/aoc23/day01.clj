@@ -45,5 +45,4 @@
 
 (comment 
   (assert (= 142 (part1 testf))))
-  (assert (= 54605 (part1 inputf)))
   (assert (= 281 (part2 test2f)))
