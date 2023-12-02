@@ -44,6 +44,11 @@
          (map #(n/m-sub bag %))
          all-positive?)))
 
+(defn min-cubes
+  [game]
+  (->> (drop 2 game)
+       (apply merge-with max)))
+
 (defn part1
   [f]
   (->> f 
@@ -53,7 +58,19 @@
        (map-indexed #(if (possible? %2) (inc %1) 0))
        (apply +)))
 
+(defn part2
+  [f]
+  (->> f
+       slurp
+       game-parser
+       transform-data
+       (map min-cubes)
+       (map vals)
+       (map #(apply * %))
+       (apply +)))
+
 (comment
-  (assert (= 8 (part1 testf))))
+  (assert (= 8 (part1 testf)))
+  (assert (= 2286 (part2 testf))))
 
 ;; The End
