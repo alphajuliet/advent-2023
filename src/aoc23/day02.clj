@@ -1,6 +1,5 @@
 (ns aoc23.day02
-  (:require [aoc23.numerimap :as n]
-            [instaparse.core :as insta]
+  (:require [instaparse.core :as insta]
             [clojure.edn :as edn]))
 
 (def testf "data/day02-test.txt")
@@ -41,7 +40,7 @@
   [game]
   (let [bag {:red 12 :green 13 :blue 14}]
     (->> (drop 2 game)
-         (map #(n/m-sub bag %))
+         (map #(merge-with - bag %))
          all-positive?)))
 
 (defn min-cubes
