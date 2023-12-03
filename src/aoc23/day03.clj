@@ -5,7 +5,6 @@
 (def testf "data/day03-test.txt")
 (def inputf "data/day03-input.txt")
 
-
 (defn find-integers
   "Given a row number and a string, it returns the start and end position of any numeric strings.
    For example: given '467..114..' it returns ([[0 0] [0 2]] [[0 5][5 7]])"
@@ -22,7 +21,7 @@
   (let [matcher (re-matcher #"[^\d\.]" s)
         indices (atom [])]
     (while (.find matcher)
-      (swap! indices conj [row (.start matcher)]))
+      (swap! indices conj [(.group matcher) [row (.start matcher)]]))
     @indices))
 
 (defn in-neighbourhood?
@@ -35,11 +34,11 @@
 (defn find-adjacent
   "Find the numbers that are adjacent to a symbol in the same, next or preceding line."
   [nums syms]
-  (for [[r1 c1] syms
+  (for [s syms
         n nums
-        :when (or (in-neighbourhood? [r1 c1] (second n))
-                  (in-neighbourhood? [r1 c1] (util/third n)))]
-    (first n)))
+        :when (or (in-neighbourhood? (second s) (second n))
+                  (in-neighbourhood? (second s) (util/third n)))]
+    [(second s) (edn/read-string (first n))]))
 
 (defn part1
   [f]
@@ -52,6 +51,24 @@
                   (apply concat))]
     (->> (find-adjacent nums syms)
          (map edn/read-string)
+         (apply +))))
+
+(defn part2
+  [f]
+  (let [data (util/import-data f)
+        nums (->> data
+                  (map-indexed find-integers)
+                  (apply concat))
+        syms (->> data
+                  (map-indexed find-symbols)
+                  (apply concat)
+                  (filter #(= "*" (first %))))]
+    (->> (find-adjacent nums syms)
+         (group-by first)
+         vals
+         (filter #(= 2 (count %)))
+         (map #(map second %))
+         (map #(apply * %))
          (apply +))))
 
 ;; The End
