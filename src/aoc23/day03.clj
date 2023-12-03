@@ -7,7 +7,7 @@
 
 (defn find-integers
   "Given a row number and a string, it returns the start and end position of any numeric strings.
-   For example: given '467..114..' it returns ([[0 0] [0 2]] [[0 5][5 7]])"
+   For example: given '467..114..' it returns (['467' [0 0] [0 2]] ['114' [0 5][5 7]])"
   [row s]
   (let [matcher (re-matcher #"\d+" s)
         indices (atom [])]
@@ -16,7 +16,7 @@
     @indices))
 
 (defn find-symbols
-  "Given a string, it returns the position of any of the non-numeric characters"
+  "Given a string, it returns the match and the position of any of the non-numeric characters"
   [row s]
   (let [matcher (re-matcher #"[^\d\.]" s)
         indices (atom [])]
@@ -34,11 +34,11 @@
 (defn find-adjacent
   "Find the numbers that are adjacent to a symbol in the same, next or preceding line."
   [nums syms]
-  (for [s syms
-        n nums
-        :when (or (in-neighbourhood? (second s) (second n))
-                  (in-neighbourhood? (second s) (util/third n)))]
-    [(second s) (edn/read-string (first n))]))
+  (for [[_ sym-rc] syms
+        [num num-start num-end] nums
+        :when (or (in-neighbourhood? sym-rc num-start)
+                  (in-neighbourhood? sym-rc num-end))]
+    [sym-rc (edn/read-string num)]))
 
 (defn part1
   [f]
