@@ -31,9 +31,29 @@
    data))
 
 (defn score-card
+  "Count the numbers of chosen cards in the winning list"
   [{:keys [winning chosen]}]
-  (let [found (set/intersection (set winning) (set chosen))]
-    (int (Math/pow 2 (dec (count found))))))
+  (count 
+   (set/intersection (set winning) (set chosen))))
+
+(defn add-cards
+  "Add additional subsequent cards based on the score"
+  [nums index scores]
+  (let [len (count scores)
+        n (nth scores index)
+        x (nth nums index)
+        delta (concat (repeat (inc index) 0)
+                      (repeat n x)
+                      (repeat (- len (+ n (inc index))) 0))]
+    (map + nums delta)))
+
+(defn process-cards
+  "Process the cards in order, adding cards according to the scores"
+  [scores]
+  (let [rng (range (count scores))]
+   (reduce (fn [acc i] (add-cards acc i scores))
+          (repeat (count scores) 1)
+          rng)))
 
 (defn part1
   [f]
@@ -42,6 +62,17 @@
          parse-cards
          transform-data
          (map score-card)
+         (map #(int (Math/pow 2 (dec %))))
+         (apply +))))
+
+(defn part2
+  [f]
+  (let [data (slurp f)]
+    (->> data
+         parse-cards
+         transform-data
+         (map score-card)
+         process-cards
          (apply +))))
 
 ;; The End
