@@ -1,31 +1,23 @@
 (ns aoc23.day04
   (:require [clojure.edn :as edn]
             [clojure.set :as set]
-            [instaparse.core :as insta]))
+            [clojure.string :as str]
+            [aoc23.util :as util]))
 
 (def testf "data/day04-test.txt")
 (def inputf "data/day04-input.txt")
 
-(def parse-cards
-  (insta/parser
-   "<cards> := (card <newline>)+
-    card := <card-id> <':'> winning <' |'> chosen
-    card-id := <'Card'> <space>+ number
-    winning := (<space> number)+
-    chosen := (<space> number)+
-    number := #'\\d+'
-    <space> := #'\\s+'
-    newline := '\\n'"))
-
-(defn transform-data
-  [data]
-  #_{:clj-kondo/ignore [:unresolved-var]}
-  (insta/transform
-   {:number edn/read-string
-    :card #(apply conj %&)
-    :winning #(hash-map :winning %&)
-    :chosen #(hash-map :chosen %&)}
-   data))
+(defn read-data
+  "Parse each line into a map"
+  [line]
+  (let [fields (str/split line #":|\|")]
+    (->> fields
+         rest
+         (map #(as-> % <>
+                 (str/trim <>)
+                 (str/split <> #"\s+")
+                 (map edn/read-string <>)))
+         (zipmap [:winning :chosen]))))
 
 (defn score-card
   "Count the numbers of chosen numbers in the winning list"
@@ -46,31 +38,28 @@
 (defn process-cards
   "Process the cards in order, adding cards according to the scores"
   [scores]
-  (let [len (count scores)
-        rng (range len)]
+  (let [len (count scores)]
    (reduce (fn [acc i] 
              (add-cards acc i scores))
           (repeat len 1)
-          rng)))
+          (range len))))
 
 (defn part1
   [f]
-  (let [data (slurp f)]
-    (->> data
-         parse-cards
-         transform-data
-         (map score-card)
-         (map #(int (Math/pow 2 (dec %))))
-         (apply +))))
+  (->> f
+       util/import-data
+       (map read-data)
+       (map score-card)
+       (map #(int (Math/pow 2 (dec %))))
+       (apply +)))
 
 (defn part2
   [f]
-  (let [data (slurp f)]
-    (->> data
-         parse-cards
-         transform-data
-         (map score-card)
-         process-cards
-         (apply +))))
+  (->> f
+       util/import-data
+       (map read-data)
+       (map score-card)
+       process-cards
+       (apply +)))
 
 ;; The End
