@@ -9,18 +9,26 @@
 (defn read-data
   "Read the input data from the file"
   [f]
-  (let [data (util/import-data f)]
-    (->> data
-         (map #(rest (str/split % #"\s+")))
-         (map #(map edn/read-string %))
-         (util/T))))
+  (->> f
+       util/import-data
+       (map #(rest (str/split % #"\s+")))
+       (map #(map edn/read-string %))
+       (util/T)))
+
+(defn read-data2
+  [f]
+  (->> f
+       util/import-data
+       (map #(rest (str/split % #"\s+")))
+       (map #(str/join "" %))
+       (mapv edn/read-string)))
 
 (defn distance
 "How far travelled in t time units if the button is pushed for h units."
   [t h]
   (* h (- t h)))
 
-(defn wins
+(defn ways-to-win
   "Number of ways to beat r, given t"
   [[t r]]
   (->> (range t)
@@ -32,7 +40,13 @@
   [f]
   (->> f
        read-data
-       (map wins)
+       ways-to-win
        (apply *)))
+
+(defn part2
+  [f]
+  (->> f
+       read-data2
+       ways-to-win))
 
 ;; The End
