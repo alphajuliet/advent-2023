@@ -5,6 +5,7 @@
 
 (def testf "data/day05-test.txt")
 (def inputf "data/day05-input.txt")
+(def input2f "data/day05-input2.txt")
 
 (defn read-seeds
   [line]
@@ -27,25 +28,46 @@
     n
     (+ n (- dest src))))
 
+(defn in-range?
+  [n [_ src rng]] 
+  (<= src n (+ src (dec rng))))
+
 (defn apply-maps
-  "Find which mapping applies to the given number"
+  "Find which mapping from the collection applies to the given number"
   [n maps]
   (->> maps
-       (filter (fn [[_ src rng]] (<= src n (+ src (dec rng)))))
+    ;; (some #(when (in-range? n %) %)) ; is slower!
+       (filter #(in-range? n %))
        first
        (map-number n)))
 
 (defn apply-all-mappings
-  "Apply all the mappings to the given number"
+  "Apply all the collections of mappings to the given number"
   [n mappings]
   (reduce apply-maps
           n
           mappings))
 
+(defn seed-ranges
+  [seeds]
+  (->> seeds
+       (partition 2)
+       (map #(range (first %) (+ (first %) (second %))))
+       (apply concat)))
+
 (defn part1
   [f]
   (let [lines (str/split (slurp f) #"\n\n")
         seeds (read-seeds (first lines))
+        mappings (map read-mappings (rest lines))]
+    (->> seeds
+         (map #(apply-all-mappings % mappings))
+         (apply min))))
+
+(defn part2
+  [f]
+  (let [lines (str/split (slurp f) #"\n\n")
+        seeds (seed-ranges (read-seeds (first lines)))
         mappings (map read-mappings (rest lines))]
     (->> seeds
          (map #(apply-all-mappings % mappings))

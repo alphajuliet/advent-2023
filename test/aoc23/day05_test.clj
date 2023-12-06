@@ -4,6 +4,7 @@
 
 (deftest apply-map-test
   (is (= 79 (src/apply-map [50 98 2] 79)))
+  (is (= 100 (src/apply-map [50 98 2] 100)))
   (is (= 51 (src/apply-map [50 98 2] 99)))
   (is (= 81 (src/apply-map [52 50 48] 79)))
   (is (= 14 (src/apply-map [50 98 2] 14)))
