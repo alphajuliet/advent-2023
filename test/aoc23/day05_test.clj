@@ -15,11 +15,11 @@
 )
 
 (deftest apply-all-mappings-test
-  (is (= 81 (src/apply-all-mappings [[50 98 2] [52 50 48]] 79)))
-  (is (= 57 (src/apply-all-mappings [[50 98 2] [52 50 48]] 55)))
-  (is (= 13 (src/apply-all-mappings [[50 98 2] [52 50 48]] 13)))
+  (is (= 81 (src/apply-stage [[50 98 2] [52 50 48]] 79)))
+  (is (= 57 (src/apply-stage [[50 98 2] [52 50 48]] 55)))
+  (is (= 13 (src/apply-stage [[50 98 2] [52 50 48]] 13)))
 
-  (is (= 14 (src/apply-all-mappings [[50 98 2] [52 50 48]] 14)))
-  (is (= 53 (src/apply-all-mappings [[0 15 37] [37 52 2] [39 0 15]] 14)))
-  (is (= 49 (src/apply-all-mappings [[49 53 8] [0 11 42] [42 0 7] [57 7 4]] 53)))
+  (is (= 14 (src/apply-stage [[50 98 2] [52 50 48]] 14)))
+  (is (= 53 (src/apply-stage [[0 15 37] [37 52 2] [39 0 15]] 14)))
+  (is (= 49 (src/apply-stage [[49 53 8] [0 11 42] [42 0 7] [57 7 4]] 53)))
   )
