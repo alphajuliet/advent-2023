@@ -13,7 +13,7 @@
        (map #(str/split % #"\s+"))
        (util/mapmap edn/read-string)))
 
-(defn diff
+(defn difference
   "Generate the difference vector from the given collection."
   [coll]
   (map - (rest coll) coll))
@@ -23,23 +23,38 @@
   [coll]
   (every? zero? coll))
 
-(defn differences
-  "Run difference operations until we have a zero vector, and collect all the intermediate vectors."
-  [coll]
-  (take-while (complement all-zero?) (iterate (comp vec diff) coll)))
-
-(defn extrapolate
+(defn fwd-extrapolate
   "Given a collection, extrapolate the next value based on finite differences"
   [coll]
   (->> coll
-       (iterate (comp vec diff))
+       (iterate (comp vec difference))
        (take-while (complement all-zero?))
        (map last)
        (apply +)))
 
+(defn bwd-extrapolate
+  "Extrapolate the previous value in the sequence"
+  [coll]
+  (->> coll
+       reverse
+       (iterate (comp vec difference))
+       (take-while (complement all-zero?))
+       (map last)
+       reverse
+       (apply +)))
+
 (defn part1
   [f]
-  (let [data (read-data f)]
-    data))
+  (->> f
+       read-data
+       (map fwd-extrapolate)
+       (apply +)))
 
+(defn part2
+  [f]
+  (->> f
+       read-data
+       (map bwd-extrapolate)
+       (apply +)))
+      
 ;; The End
