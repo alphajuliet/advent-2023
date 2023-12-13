@@ -79,7 +79,6 @@
   [hands]
   (->> hands
        (map (juxt (comp classify-hand first) second))
-    ;;    (sort-by second <) ;; should not need this
        (sort-by (comp second first) compare-hands3)
        (sort-by (comp first first) compare-type)))
 

@@ -3,12 +3,13 @@
 
 (def testf "data/day08-test.txt")
 (def test2f "data/day08-test2.txt")
+(def test3f "data/day08-test3.txt")
 (def inputf "data/day08-input.txt")
 
 (defn parse-line
   "Parse each line of the graph"
   [line]
-  (let [[_ node l r] (first (re-seq #"^([A-Z]+)\s=\s\(([A-Z]+),\s([A-Z]+)\)" line))]
+  (let [[_ node l r] (first (re-seq #"^([\w]+)\s=\s\(([\w]+),\s([\w]+)\)" line))]
     {node [l r]}))
 
 (defn read-data
@@ -19,21 +20,47 @@
     {:path (first raw-data)
      :graph (apply conj (map parse-line graph))}))
 
+(defn- update-posn 
+  "Traverse one step based on the next path instruction"
+  [dir graph posn]
+  (if (= "L" dir)
+    (first (get graph posn))
+    (second (get graph posn))))
+
 (defn traverse-graph
-  [{:keys [path graph]}]
-  (loop [posn "AAA"
-         path (flatten (repeat (str/split path #"")))
+  "Traverse the graph from the start to the node ZZZ"
+  [{:keys [path graph]} start]
+  (loop [posn start
+         path (cycle (str/split path #""))
          steps 1]
-    (let [posn' (if (= "L" (first path))
-                  (first (get graph posn))
-                  (second (get graph posn)))]
+    (let [posn' (update-posn (first path) graph posn)]
       (if (= "ZZZ" posn')
         steps
+        ;; else
         (recur posn' (rest path) (inc steps))))))
+
+(defn par-traverse-graph
+  "Traverse parallel paths"
+  [{:keys [path graph]} start-nodes]
+  (set! *print-length* 5) ; help the debugger
+  (loop [posn start-nodes
+         path-seq (cycle (str/split path #""))
+         steps 1]
+    (let [posn' (map #(update-posn (first path-seq) graph %) posn)]
+      (if (every? #(str/ends-with? % "Z") posn')
+        steps
+        ;; else
+        (recur posn' (rest path-seq) (inc steps))))))
 
 (defn part1
   [f]
   (let [data (read-data f)]
-    (traverse-graph data)))
+    (traverse-graph data "AAA")))
+
+(defn part2
+  [f]
+  (let [data (read-data f)
+        start-nodes (filter #(str/ends-with? % "A") (keys (:graph data)))]
+    (par-traverse-graph data start-nodes)))
 
 ;; The End

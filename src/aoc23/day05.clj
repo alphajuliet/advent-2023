@@ -78,19 +78,24 @@
             mappings)))
 
 (defn convert-seed-range
-  "Push the seed range through the mapping."
-  [[seed-start seed-end :as seed-range] [dest map-start map-range]]
-  (let [map-end (+ map-start (dec map-range))
-        delta (- dest map-start)]
-    (if (< seed-start map-start)
+  "Map a range of seeds but apply a delta to the values where it overlaps with the map range."
+  [[seed-start seed-end] [map-dest map-start map-rng]]
+  (let [map-end (+ map-start (dec map-rng))
+        delta (- map-dest map-start)]
+    (if (<= seed-start map-start)
       (cond
-        (< seed-end map-start) seed-range ;; case 1
-        (< seed-end map-end) (map (partial + delta) [map-start seed-end]);; case 2
-        :else (map (partial + delta) [map-start map-end])) ;; case 6
+        (< seed-end map-start) [[seed-start seed-end]] ;; case 1
+        (< seed-end map-end) [[seed-start (dec map-start)]
+                              (mapv (partial + delta) [map-start seed-end])];; case 2
+        :else (map (partial + delta) [[seed-start (dec map-start)]
+                                      (mapv (partial + delta) [map-start map-end])
+                                      [(inc map-end) seed-end]])) ;; case 6
       (cond
-        (< seed-start map-end) (map (partial + delta) [seed-start map-end]) ;; case 3
-        (> seed-start map-end) seed-range ;; case 4
-        :else (map (partial + delta) [seed-start seed-end])))))
+        (> seed-start map-end) [[seed-start seed-end]] ;; case 4
+        (< map-end seed-end) [(mapv (partial + delta) [seed-start map-end])
+                              [(inc map-end) seed-end]] ;; case 3
+        :else [(mapv (partial + delta) [seed-start seed-end])])) ;; case 5
+    ))
 
 (defn part1
   [f]
@@ -101,10 +106,14 @@
          (map #(apply-stage % mappings))
          (apply min))))
 
+(defn make-range
+  [[start rng]]
+  [start (+ start (dec rng))])
+
 (defn part2
   [f]
   (let [lines (str/split (slurp f) #"\n\n")
-        seeds (partition 2 (read-seeds (first lines)))
+        seeds (map make-range (vec (partition 2 (read-seeds (first lines)))))
         mappings (map read-mappings (rest lines))]
         (for [s seeds
               m mappings]
