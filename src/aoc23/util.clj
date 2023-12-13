@@ -184,4 +184,10 @@
        (slurp)
        (str/split-lines)))
 
+(defn manhattan
+  "Manhattan distance between two points"
+  [[x1 y1] [x2 y2]]
+  (+ (abs (- x1 x2))
+     (abs (- y1 y2))))
+
 ;; The End
