@@ -58,7 +58,6 @@
 (defn distances
   "Find the distances between all the coordinates in the list"
   [insertions incr coords]
-;;   (set! *print-length* 5) ; help the debugger
   (for [[p1 p2] (combo/combinations coords 2)]
     (expanded-manhattan p1 p2 insertions incr)))
 
