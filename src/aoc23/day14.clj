@@ -18,64 +18,85 @@
        (partition-by #(= % ch))
        (mapv #(str/join "" %))))
 
-(defn count-char 
-"Count the number of times ch appears in s"
-  [s ch]
-  (->> s
-       (filter #(= ch %))
-       count))
-
 (defn shift-right
   "Return a string of the same length but with all the O characters at the right-hand end"
   [s]
   (let [len (count s)
-        n (count-char s \O)]
+        n (count (filter #(= \O %) s))]
     (if (zero? n)
       s
     ;; else
-      (str (str/join (repeat (- len n) \.))
-           (str/join (repeat n \O))))))
-
-(defn score-string
-  "Score a string based on the position of the 'O' characters"
-  [s]
-  (let [len (count s)
-        n (count-char s \O)
-        a (- len (dec n))]
-    (int (* (/ n 2)
-        (+ (* 2 a) (dec n))))))
+      (str (apply str (repeat (- len n) \.))
+           (apply str (repeat n \O))))))
 
 (defn tilt-right
   "Tilt the array to the right"
   [data]
   (->> data
-       (map reverse)
-       (map str/join)
        (mapv #(split-keep % \#))
-       (util/mapmap shift-right)))
+       (util/mapmap shift-right)
+       (map str/join)))
+
+(defn score-string
+  "Score a string based on the position of the 'O' characters"
+  [s]
+  (let [len (count s)
+        n (util/count-if #(= \O %) s)
+        a (- len (dec n))]
+    (int (* (/ n 2)
+            (+ (* 2 a) (dec n))))))
 
 (defn score-row
   "Score the full row of strings"
   [row]
   (loop [score 0
-         strs row
+         strings row
          posn 0]
-    (if (empty? strs)
+    (if (empty? strings)
       score
       ;; else
-      (let [s (first strs)
-            n (count-char s \O)]
+      (let [s (first strings)
+            n (util/count-if #(= \O %) s)]
         (recur (+ score (* posn n) (score-string s))
-               (next strs)
+               (next strings)
                (+ posn (count s)))))))
+
+(defn rotate-array
+  "Rotate an array by 90º anti-clockwise"
+  [arr]
+  (->> arr
+       util/T
+       (map str/join)))
+
+(defn spin-cycle
+  [data]
+  (reduce (fn [arr _] 
+            (->> arr
+                 rotate-array  
+                 tilt-right))
+          data
+          (range 4)))
 
 (defn part1
   [f]
   (let [data (read-data f)]
     (->> data
          util/T
+         (map reverse)
+         (map str/join)
          tilt-right
+         (mapv #(split-keep % \#))
          (map score-row)
          (apply +))))
+
+(defn part2
+  [f]
+  (let [data (read-data f)
+        ncycles 1000000000]
+    (->> (reduce (fn [d _] (spin-cycle d)) 
+                 data 
+                 (range ncycles))
+         (mapv #(split-keep % \#))
+         (map score-row))))
 
 ;; The End
