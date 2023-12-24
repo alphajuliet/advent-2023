@@ -22,7 +22,7 @@
   "Return a string of the same length but with all the O characters at the right-hand end"
   [s]
   (let [len (count s)
-        n (count (filter #(= \O %) s))]
+        n (util/count-if #(= \O %) s)]
     (if (zero? n)
       s
     ;; else
@@ -92,7 +92,7 @@
 (defn part2
   [f]
   (let [data (read-data f)
-        ncycles 1000000000]
+        ncycles 100000]
     (->> (reduce (fn [d _] (spin-cycle d)) 
                  data 
                  (range ncycles))
