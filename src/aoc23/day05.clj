@@ -84,18 +84,24 @@
         delta (- map-dest map-start)]
     (if (<= seed-start map-start)
       (cond
-        (< seed-end map-start) [[seed-start seed-end]] ;; case 1
-        (< seed-end map-end) [[seed-start (dec map-start)]
-                              (mapv (partial + delta) [map-start seed-end])];; case 2
-        :else (map (partial + delta) [[seed-start (dec map-start)]
-                                      (mapv (partial + delta) [map-start map-end])
-                                      [(inc map-end) seed-end]])) ;; case 6
+        ;; case 1
+        (< seed-end map-start) [[seed-start seed-end]]
+        ;; case 2
+        (< map-start seed-end map-end) [[seed-start (dec map-start)]
+                                        (mapv (partial + delta) [map-start seed-end])]
+        ;; case 6 (> map-end seed-end)
+        :else [[seed-start (dec map-start)]
+               (mapv (partial + delta) [map-start map-end])
+               [(inc map-end) seed-end]])
+      ;; else (> seed-start map-start)
       (cond
-        (> seed-start map-end) [[seed-start seed-end]] ;; case 4
+        ;; case 4
+        (> seed-start map-end) [[seed-start seed-end]]
+        ;; case 3
         (< map-end seed-end) [(mapv (partial + delta) [seed-start map-end])
-                              [(inc map-end) seed-end]] ;; case 3
-        :else [(mapv (partial + delta) [seed-start seed-end])])) ;; case 5
-    ))
+                              [(inc map-end) seed-end]]
+        ;; case 5
+        :else [(mapv (partial + delta) [seed-start seed-end])]))))
 
 (defn part1
   [f]
@@ -113,8 +119,9 @@
 (defn part2
   [f]
   (let [lines (str/split (slurp f) #"\n\n")
-        seeds (map make-range (vec (partition 2 (read-seeds (first lines)))))
-        mappings (map read-mappings (rest lines))]
+        seeds (mapv make-range (vec (partition 2 (read-seeds (first lines)))))
+        mappings (mapv read-mappings (rest lines))]
+        ;; [seeds mappings]
         (for [s seeds
               m mappings]
           (reduce convert-seed-range s m))
