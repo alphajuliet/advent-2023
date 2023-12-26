@@ -4,6 +4,7 @@
             [aoc23.util :as util]))
 
 (def testf "data/day07-test.txt")
+(def test2f "data/day07-test2.txt")
 (def inputf "data/day07-input.txt")
 (def input2f "data/day07-input2.txt")
 
@@ -15,19 +16,32 @@
        (map #(str/split % #"\s+"))
        (map #(vector (first %) (edn/read-string (second %))))))
 
+(defn compare-lists
+  "Compare two items from an ordered collection"
+  [a b coll]
+  (let [i1 (.indexOf coll a)
+        i2 (.indexOf coll b)]
+    (compare i1 i2)))
+
 (defn compare-label
   [a b]
-  (let [labels [\A \K \Q \J \T \9 \8 \7 \6 \5 \4 \3 \2]
-        i1 (.indexOf labels a)
-        i2 (.indexOf labels b)]
-    (compare i1 i2)))
+  (compare-lists a b [\A \K \Q \J \T \9 \8 \7 \6 \5 \4 \3 \2]))
 
 (defn compare-type
   [a b]
-  (let [types [:five :four :full-house :three :two-pairs :pair :high-card :nothing]
-        i1 (.indexOf types a)
-        i2 (.indexOf types b)]
-    (compare i1 i2)))
+  (compare-lists a b [:five :four :full-house :three :two-pairs :pair :high-card :nothing]))
+
+(defn compare-cards
+  "Compare cards in order using compare-label"
+  [s1 s2]
+  (loop [[c1 & rest1] s1
+         [c2 & rest2] s2]
+    (cond
+      (and (nil? c1) (nil? c2)) 0
+      (nil? c1) -1
+      (nil? c2) 1
+      :else (let [cmp (compare-label c1 c2)]
+              (if (zero? cmp) (recur rest1 rest2) cmp)))))
 
 (defn sort-cards
   "Sort the hand first by frequency and then by key"
@@ -51,35 +65,12 @@
                :error)]
     [type (sort-cards (vec freq))]))
 
-(defn compare-hands
-  [[[l1a _] [l1b _] [l1c _]] [[l2a _] [l2b _] [l2c _]]]
-  (let [cmp (compare-label l1a l2a)]
-    (if (zero? cmp)
-      (let [cmp2 (compare-label l1b l2b)]
-        (if (zero? cmp2)
-          (compare-label l1c l2c)
-          cmp2))
-      cmp)))
-
-(defn compare-hands3
-  [hand1 hand2]
-  (loop [[card1 & rest1] hand1
-         [card2 & rest2] hand2]
-    (cond
-      (and (nil? card1) (nil? card2)) 0 ;; Both hands are empty, they are equal
-      (nil? card1) -1 ;; Hand1 is shorter, it's less
-      (nil? card2) 1 ;; Hand2 is shorter, it's less
-      :else (let [cmp (compare-label (first card1) (first card2))]
-              (if (zero? cmp)
-                (recur rest1 rest2)
-                cmp)))))
-
 (defn sort-hands
   "Sort all the hands by type then by the cards"
   [hands]
   (->> hands
+       (sort-by first compare-cards)
        (map (juxt (comp classify-hand first) second))
-       (sort-by (comp second first) compare-hands3)
        (sort-by (comp first first) compare-type)))
 
 (defn part1
@@ -94,6 +85,7 @@
          (apply +))))
 
 (comment 
-  (assert (= 6440 (part1 testf))))
+  (assert (= 6440 (part1 testf)))
+  (assert (= 1343 (part1 test2f))))
 
 ;; The End
