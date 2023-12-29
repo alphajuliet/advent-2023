@@ -1,25 +1,10 @@
 (ns aoc23.day10
-  (:require [ubergraph.core :as uber]
-            [ubergraph.alg :as alg]
-            [aoc23.util :as util]))
+  (:require [aoc23.util :as util]))
 
 (def testf "data/day10-test.txt")
 (def test2f "data/day10-test2.txt")
 (def test3f "data/day10-test3.txt")
 (def inputf "data/day10-input.txt")
-
-(defn read-data
-  [f]
-  (->> f
-       util/import-data))
-
-#_(defn extract-nodes
-  "Extract the coordinates of each character in the matrix than is not a period."
-  [data]
-  (for [x (range 0 (count (first data)))
-        y (range 0 (count data))
-        :when (not= \. (get-in data [x y]))]
-    [x y]))
 
 (defn find-start-node
   "Extract the coordinates of each character in the matrix than is not a period."
@@ -30,75 +15,44 @@
     [x y]))
 
 (defn navigate-loop
-  "Navigate the loop and update the position based on the character"
-  [data [r c :as rc]]
-  (let [val (get-in data rc)]
-    (case val
-      \F [[(inc r) c] [r (inc c)]]
-      \7 [[(inc r) c] [r (dec c)]]
-      \J [[(dec r) c] [r (dec c)]]
-      \L [[(dec r) c] [r (inc c)]]
-      \| [[(dec r) c] [(inc r) c]]
-      \- [[r (dec c)] [r (inc c)]]
-      \S rc
-      nil)))
+  "Navigate the loop and update the position based on the character and the entry direction"
+  [data rc [dr dc]]
+  (let [val (get-in data rc)
+        dir' (case val
+               \F (if (zero? dr) [1 0] [0 1])
+               \7 (if (zero? dr) [1 0] [0 -1])
+               \J (if (zero? dr) [-1 0] [0 -1])
+               \L (if (zero? dr) [-1 0] [0 1])
+               \| [dr dc]
+               \- [dr dc]
+               \S [dr dc]
+               nil)]
+    {:rc (mapv + rc dir') :dir dir'}))
 
 (defn find-first-step
   [[r c :as start]]
   (cond
-    (= [2 0] start) [2 1]
-    (= [62 111] start) [62 110] ;; cheating
-    :else [(inc r) c]))
+    (= [2 0] start) {:rc [2 0] :dir [0 1]}
+    (= [62 111] start) {:rc [62 111] :dir [-1 0]} ;; taken from the input data
+    :else {:rc [(inc r) c] :dir [0 1]}))
 
 (defn traverse-loop
   [data]
   (let [start (first (find-start-node data))]
     (set! *print-length* 5) ; help the debugger
-    (loop [rc (find-first-step start)
+    (loop [{:keys [rc dir]} (find-first-step start)
            length 0]
-      (let [rc' (navigate-loop data rc)]
-        (if (= rc' start)
-          length
-          (recur rc' (inc length)))))))
-
-#_(defn make-graph
-  "Make a map representation of the graph"
-  [data]
-  (let [nodes (extract-nodes data)]
-    (into {} (for [node nodes
-                   :let [nn (neighbours node (get-in data node))]]
-               [node nn]))))
-
-#_(defn find-start-node
-  [m]
-  (->> m
-       (filter #(= nil (second %)))
-       first
-       first))
-
-#_(defn make-ubergraph
-  "Turn into a real graph"
-  [m]
-  (let []
-    (reduce
-     (fn [g [node edges]]
-       (reduce
-        (fn [g edge]
-          (uber/add-edges g [node edge]))
-        g
-        edges))
-     (uber/graph)
-     m)))
-
-(defn find-paths
-  [g]
-  ())
+      (let [state (navigate-loop data rc dir)]
+        (if (= (:rc state) start)
+          (inc length)
+          ;; else
+          (recur state (inc length)))))))
 
 (defn part1
   [f]
-  (let [data (read-data f)
-        start (first (find-start-node data))]
-    (println "start" start)
-    ))
+  (let [data (util/import-data f)]
+    (-> data
+        traverse-loop
+        (quot 2))))
 
 ;; The End
