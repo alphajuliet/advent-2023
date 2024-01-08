@@ -55,7 +55,7 @@
   "Sort the hand first by frequency and then by key"
   [hand]
   (->> hand
-       (sort-by first compare-label)
+       (sort-by first compare-type)
        (sort-by second >)))
 
 (defn classify-hand
