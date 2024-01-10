@@ -34,23 +34,27 @@
          path (cycle (str/split path #""))
          steps 1]
     (let [posn' (update-posn (first path) graph posn)]
-      (if (= "ZZZ" posn')
+      (if (str/ends-with? posn' "Z")
         steps
         ;; else
         (recur posn' (rest path) (inc steps))))))
 
-(defn par-traverse-graph
-  "Traverse parallel paths"
-  [{:keys [path graph]} start-nodes]
-  (set! *print-length* 5) ; help the debugger
-  (loop [posn start-nodes
-         path-seq (cycle (str/split path #""))
-         steps 1]
-    (let [posn' (map #(update-posn (first path-seq) graph %) posn)]
-      (if (every? #(str/ends-with? % "Z") posn')
-        steps
-        ;; else
-        (recur posn' (rest path-seq) (inc steps))))))
+(defn gcd
+  "Greatest common divisor"
+  [a b]
+  (if (zero? b)
+    a
+    (recur b, (mod a b))))
+
+(defn lcm
+  "Lowest common multiple"
+  [a b]
+  (/ (* a b) (gcd a b)))
+
+(defn lcmv
+  "Find the LCM of a variable number of items"
+  [& v]
+  (reduce lcm v))
 
 (defn part1
   [f]
@@ -59,8 +63,16 @@
 
 (defn part2
   [f]
-  (let [data (read-data f)
-        start-nodes (filter #(str/ends-with? % "A") (keys (:graph data)))]
-    (par-traverse-graph data start-nodes)))
+  (let [data (read-data f)]
+    (->> data
+         (:graph)
+         keys
+         (filter #(str/ends-with? % "A"))
+         (map #(traverse-graph data %))
+         (apply lcmv))))
+
+(comment
+  (assert (= 6 (part1 test2f)))
+  (assert (= 6 (part2 test3f))))
 
 ;; The End
