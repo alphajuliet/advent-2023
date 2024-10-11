@@ -1,20 +1,34 @@
 (ns aoc23.day10
-  (:require [aoc23.util :as util]))
+  (:require [aoc23.util :as util]
+            [clojure.math.combinatorics :as combo]
+            [clojure.set :as set]))
 
 (def testf "data/day10-test.txt")
 (def test2f "data/day10-test2.txt")
 (def test3f "data/day10-test3.txt")
 (def test4f "data/day10-test4.txt")
 (def test5f "data/day10-test5.txt")
+(def test6f "data/day10-test6.txt")
 (def inputf "data/day10-input.txt")
 
 (defn find-start-node
-  "Extract the coordinates of each character in the matrix than is not a period."
+  "Find the coordinates of the starting node"
   [data]
-  (for [x (range 0 (count (first data)))
-        y (range 0 (count data))
-        :when (= \S (get-in data [x y]))]
-    [x y]))
+  (for [c (range (count (first data)))
+        r (range (count data))
+        :when (= \S (get-in data [r c]))]
+    [r c]))
+
+(defn neighbors 
+  "Return the neighbors of a given coordinate"
+  [[x y]]
+  [[(dec x) y] [(inc x) y] [x (dec y)] [x (inc y)]])
+
+(defn in-bounds? 
+  "Return true if the coordinate is in bounds"
+  [grid [x y]]
+  (and (< -1 x (count grid))
+       (< -1 y (count (first grid)))))
 
 (defn navigate-loop
   "Navigate the loop and update the position based on the character and the entry direction"
@@ -32,11 +46,12 @@
     {:rc (mapv + rc dir') :dir dir'}))
 
 (defn find-first-step
+  "Work out the initial direction of traversal"
   [[r c :as start]]
   (cond
     (= [2 0] start) {:rc [2 0] :dir [0 1]}
     (= [62 111] start) {:rc [62 111] :dir [-1 0]} ;; taken from the input data
-    :else {:rc [(inc r) c] :dir [0 1]}))
+    :else {:rc [r c] :dir [1 0]}))
 
 (defn traverse-loop
   "Traverse the loop from the start position, counting the steps and all the visited positions."
@@ -52,34 +67,35 @@
           ;; else
           (recur state (conj visited (:rc state)) (inc length)))))))
 
-(defn find-crossings
-  "Find where the loop crosses a row"
-  [loop-rc row maxc]
-  (let [xx (set (filter #(= row (first %)) loop-rc))]
-    (loop [posns []
-           col 0 
-           i 0]
-      (if (>= col maxc)
-        posns
-        ;; else
-        (if (and (contains? xx [row col])
-                 (odd? i))
-          (recur (conj posns [row col]) (inc col) (inc i))
-          ;; else
-          (recur posns (inc col) i)
-          )))))
+(defn flood-fill 
+  "Flood fill the grid starting at the given coordinate"
+  [grid loop-set [x y] visited]
+  (if (or (not (in-bounds? grid [x y]))
+          (contains? visited [x y])
+          (contains? loop-set [x y]))
+    visited
+    (reduce (fn [acc neighbor]
+              (flood-fill grid loop-set neighbor acc))
+            (conj visited [x y])
+            (neighbors [x y]))))
 
-(defn scan-loop
-  "Scan the rows of the grid and identify all spaces inside the grid."
-  [grid loop-rc]
-  (let [maxr (count grid)
-        maxc (count (first grid))]
-        ;; Scan each row and identify any spaces that are an odd number of crossings of the loop
-(for [r (range maxr)
-      c (range maxc)
-      :let [x (find-crossings loop-rc r maxc)]
-      :when true]
-    [r c])))
+(defn enclosed-spaces 
+  "Return the coordinates of all the spaces that are enclosed by the loop"
+  [grid loop-set]
+  (let [all-coords (for [x (range (count grid))
+                         y (range (count (first grid)))]
+                     [x y])
+        outside (reduce (fn [acc [x y]]
+                          (if (or (zero? x) (zero? y)
+                                  (= x (dec (count grid)))
+                                  (= y (dec (count (first grid)))))
+                            (flood-fill grid loop-set [x y] acc)
+                            acc))
+                        #{}
+                        all-coords)]
+    (vec (sort (filter #(and (not (contains? outside %))
+                             (not (contains? loop-set %)))
+                       all-coords)))))
 
 (defn part1
   [f]
@@ -92,8 +108,9 @@
 (defn part2
   [f]
   (let [data (util/import-data f)]
-    (-> data
-        traverse-loop
-        (:visited))))
+    (->> data
+         traverse-loop
+         :visited
+         (enclosed-spaces data))))
 
 ;; The End

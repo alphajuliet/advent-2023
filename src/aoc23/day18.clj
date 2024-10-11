@@ -57,13 +57,13 @@
         (recur current' (rest instrs') boundary'))
       boundary)))
 
-(defn process-row
-  "Find the enclosed area in a row, including the edges"
+(defn process-line
+  "Find the enclosed area in a line, including the edges"
   [coords]
-  (let [cols (sort (map second coords))]
-    (if (nil? cols)
+  (let [ys (sort-by second coords)]
+    (if (nil? ys)
       0
-      (inc (- (last cols) (first cols))))))
+      ys)))
       
 (defn calculate-area
   "Calculate the enclosed area, including the edge"
@@ -71,8 +71,9 @@
   (->> perimeter-coords
        (group-by first)
        vals
-       (map process-row)
-       (apply +)))
+       (sort-by (comp first first))
+       (map process-line)
+       #_(apply +)))
 
 (defn plot-coordinates
   "Plot the coordinates as a string"
