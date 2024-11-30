@@ -1,14 +1,6 @@
 # day01.jl
 
-using Chain, Test
-
-"""Read input data from a file"""
-function read_data(f)
-  data = open(f) do io
-    read(io, String)
-  end
-  split(data, "\n")
-end
+using Chain, Test, .Util
 
 """Find the aggregate of all digits in a string"""
 function find_numbers(str)
@@ -34,7 +26,7 @@ function find_numbers2(str)
 end
 
 function part1(f)
-  lines = read_data(f)
+  lines = Util.read_data(f)
   @chain lines begin
     filter(x -> length(x)>=1, _)
     map(find_numbers, _)
@@ -43,7 +35,7 @@ function part1(f)
 end
 
 function part2(f)
-  lines = read_data(f)
+  lines = Util.read_data(f)
   @chain lines begin
     filter(x -> length(x)>=1, _)
     map(find_numbers2, _)
