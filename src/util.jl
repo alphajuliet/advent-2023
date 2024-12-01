@@ -5,10 +5,7 @@ module Util
 
 """Read input data from a file"""
 function read_data(f)
-  data = open(f) do io
-    read(io, String)
-  end
-  split(data, "\n")
+  filter!(x -> !isempty(x), split(read(f, String), "\n"))
 end
 
 end # module

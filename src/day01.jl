@@ -1,6 +1,8 @@
 # day01.jl
 
-using Chain, Test, .Util
+module Day01
+
+using Chain, Test, Main.Util
 
 """Find the aggregate of all digits in a string"""
 function find_numbers(str)
@@ -46,5 +48,7 @@ end
 @test part1("data/day01-test.txt") == 142
 @test part2("data/day01-test.txt") == 142
 @test part2("data/day01-test2.txt") == 281
+
+end # module
 
 # The End
